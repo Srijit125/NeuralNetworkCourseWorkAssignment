@@ -1,5 +1,3 @@
-import math
-
 import scipy.io as io
 import scipy.fft as fft
 import numpy as np
@@ -10,7 +8,6 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix
 
 
-# Forward Propagation by Sigmoid function
 def forwardPropagationSigmoid(xvalue):
     sig = (1/(1+np.exp(-xvalue)))
     return sig
@@ -18,9 +15,9 @@ def forwardPropagationSigmoid(xvalue):
 
 def Sigmoid(z):
     if z < 0:
-        return 1 - 1/(1 + math.exp(z))
+        return 1 - 1/(1 + np.exp(z))
     else:
-        return 1/(1 + math.exp(-z))
+        return 1/(1 + np.exp(-z))
 
 
 def assessment(y1, y2):
@@ -39,142 +36,81 @@ def gradientB(x, y1, y2):
     return gradient
 
 
-def updatingWeights(x, y1, y2):
+def updatingWeights(x, y1, y2, w, b):
     learningRate = 0.61
     updatedW = w - learningRate * gradientWeight(x, y1, y2)
     updatedB = b - learningRate * gradientB(x, y1, y2)
     return updatedW, updatedB
 
 
-data = io.loadmat('WLDataCW.mat')
-print('Length: ' + str(len(data)))
-print(data.keys())
-print(data['__globals__'])
-data_only = data["data"]
-label = data["label"]
-print(data_only.shape)
-print(label.shape)
-
-dataForTraining = np.array(data_only)
-groundTruth = np.array(label)
-
-newData = dataForTraining.reshape((dataForTraining.shape[0] * dataForTraining.shape[1]), dataForTraining.shape[2])
-
-train_pct_index = int(0.8 * newData.shape[1])
-X_train, X_test = newData[:, :train_pct_index], newData[:, train_pct_index:]
-y_train, y_test = groundTruth[:, :train_pct_index], groundTruth[:, train_pct_index:]
-print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
-
-'''
-print(newData.transpose().shape)
-print(groundTruth.transpose().shape)
-x_train, x_test, y_train, y_test = train_test_split(newData, groundTruth, test_size=0.20)
-print(x_train.shape, y_train.shape, x_test.shape, y_test.shape)
-'''
-'''
-kfold = KFold(5)
-
-for train, test in kfold.split(newData):
-    print('train: %s, test: %s' % (newData[train], newData[test]))
-    # print(newData[train].shape, newData[test].shape)
-
-w = np.random.normal(loc=0.0, scale=1e-2, size=(X_train.shape[0], y_train.shape[0]))
-b = np.random.normal(loc=0.0, scale=1e-2, size=(y_train.shape[0], 1))
-'''
-w = np.full((X_train.shape[0], 1), 0.15)
-b = np.full((1, y_train.shape[1]), 0)
-
-print(w, w.shape)
-print(b, b.shape)
-
-y = preprocessing.maxabs_scale(X_train)
-groundTruth = preprocessing.maxabs_scale(y_train)
-print(groundTruth)
-
-x = np.real(fft.fft2(y))
-#y = newData
-#print(x, x.shape, x.dtype)
-
-#y = preprocessing.MinMaxScaler().fit_transform(newData)
-
-#X_train, X_test, Y_train, Y_test = train_test_split(y, groundTruth, test_size=0.25)
+def loadData(filename):
+    data = io.loadmat(filename)
+    print('Length: ' + str(len(data)))
+    print(data.keys())
+    print(data['__globals__'])
+    data_only = data["data"]
+    label = data["label"]
+    dataForTraining = np.array(data_only)
+    groundTruth = np.array(label)
+    newData = dataForTraining.reshape((dataForTraining.shape[0] * dataForTraining.shape[1]), dataForTraining.shape[2])
+    train_pct_index = int(0.8 * newData.shape[1])
+    X_train, X_test = newData[:, :train_pct_index], newData[:, train_pct_index:]
+    Y_train, Y_test = groundTruth[:, :train_pct_index], groundTruth[:, train_pct_index:]
+    return X_train, X_test, Y_train, Y_test
 
 
-'''
-calc = np.dot(w.transpose(), y) + b
-yCalc = forwardPropagationSigmoid(calc)
-print(yCalc)
-print(yCalc.shape)
-loss = assessment(groundTruth, yCalc)
-print(loss)
-
-w, b = updatingWeights(y, groundTruth, yCalc)
-print(w, w.shape)
-print(b, b.shape)
+def assignWB(x, y):
+    w = np.full((x.shape[0], 1), 0.15)
+    b = np.full((1, y.shape[1]), 0)
+    return w, b
 
 
-nData = preprocessing.MinMaxScaler().fit_transform(newData)
-nDataW = preprocessing.MinMaxScaler().fit_transform(w)
-# calc = np.dot(w.transpose(), newData[train]) + b
-calc = np.dot(w.transpose(), y) + b
-yCalc = forwardPropagationSigmoid(calc)
-loss2 = assessment(groundTruth, yCalc)
-print('loss after update: ', loss2)
-'''
+def preProcessing(x, y):
+    preX = preprocessing.maxabs_scale(x)
+    groundTruth = preprocessing.maxabs_scale(y)
+    return preX, groundTruth
 
-lossAll = []
-dAll = [w]
 
-for i in range(0, 1000):
-    calc = np.dot(w.transpose(), y) + b
-    yCalc = forwardPropagationSigmoid(calc)
-    print(yCalc.shape, yCalc.dtype)
-    #print(yCalc)
-    #print(yCalc.shape)
-    loss = assessment(y_train, yCalc)
-    lossAll.append(loss)
-    if loss <= 0.0001:
-        break
-    w, b = updatingWeights(y, y_train, yCalc)
-    #print(w, w.shape)
-    #print(b, b.shape)
+def trainModel(x, y):
+    w, b = assignWB(x, y)
+    print(w.shape, x.shape)
+    lossAll = []
+    for i in range(0, 1000):
+        calc = np.dot(w.transpose(), x) + b
+        yCalc = forwardPropagationSigmoid(calc)
+        loss = assessment(y, yCalc)
+        lossAll.append(loss)
+        if loss <= 0.0001:
+            break
+        w, b = updatingWeights(x, y, yCalc, w, b)
+    plt.plot(np.array(lossAll))
+    plt.show()
+    return w, b
 
-    #y_pred = log.predict(y)
-    #print(yCalc.shape, yCalc.dtype)
-    #print(groundTruth.shape, groundTruth.dtype)
 
-'''
-print(np.round(yCalc))
-print(groundTruth)
-score = accuracy_score(groundTruth, yCalc)
-print('Score :', score)
-'''
-
-print(lossAll)
-print(len(lossAll))
-plt.plot(np.array(lossAll))
-plt.show()
-# print(newData.shape)
 # Testing the data
+def testingData(x, y, w, b):
+    #w = np.full((X_test.shape[0], 1), )
+    b = np.full((1, y.shape[1]), b[0][0])
+    xTest, y = preProcessing(x, y)
+    x = np.real(fft.fft2(xTest))
+    calc = np.dot(w.transpose(), x) + b
+    yPred = forwardPropagationSigmoid(calc)
+    y01 = np.where(yPred.reshape(-1) > 0.5, 1, 0)
+    loss2 = assessment(y, y01)
+    print(y01, y01.dtype, y01.shape)
+    print('loss after update: ', loss2)
+    print(confusion_matrix(y.reshape(-1), y01))
+    print(classification_report(y.reshape(-1), y01))
 
 
+x_train, x_test, y_train, y_test = loadData('WLDataCW.mat')
+# Training the data
+xTrain, yTrain = preProcessing(x_train, y_train)
+trainedW, trainedB = trainModel(xTrain, yTrain)
 
-#w = np.full((X_test.shape[0], 1), 0.15)
-b = np.full((1, y_test.shape[1]), 0)
+# Testing the data
+xTest, yTest = preProcessing(x_test, y_test)
+testingData(xTest, yTest, trainedW, trainedB)
 
-print(w, w.shape)
-print(b, b.shape)
 
-xTest = preprocessing.maxabs_scale(X_test)
-yTrue = preprocessing.maxabs_scale(y_test)
-print(yTrue)
-
-x = np.real(fft.fft2(xTest))
-calc = np.dot(w.transpose(), x) + b
-yPred = forwardPropagationSigmoid(calc)
-y01 = np.where(yPred.reshape(-1) > 0.5, 1, 0)
-loss2 = assessment(yTrue, y01)
-print(y01, y01.dtype, y01.shape)
-print('loss after update: ', loss2)
-print(confusion_matrix(yTrue.reshape(-1), y01))
-print(classification_report(yTrue.reshape(-1), y01))
