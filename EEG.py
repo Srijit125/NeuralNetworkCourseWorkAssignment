@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold, cross_val_score, train_test_split
 from sklearn import preprocessing
 import matplotlib.pyplot as plt
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import classification_report, confusion_matrix
 
 
 # Forward Propagation by Sigmoid function
@@ -40,7 +40,7 @@ def gradientB(x, y1, y2):
 
 
 def updatingWeights(x, y1, y2):
-    learningRate = 0.81
+    learningRate = 0.61
     updatedW = w - learningRate * gradientWeight(x, y1, y2)
     updatedB = b - learningRate * gradientB(x, y1, y2)
     return updatedW, updatedB
@@ -77,8 +77,10 @@ kfold = KFold(5)
 for train, test in kfold.split(newData):
     print('train: %s, test: %s' % (newData[train], newData[test]))
     # print(newData[train].shape, newData[test].shape)
-'''
 
+w = np.random.normal(loc=0.0, scale=1e-2, size=(X_train.shape[0], y_train.shape[0]))
+b = np.random.normal(loc=0.0, scale=1e-2, size=(y_train.shape[0], 1))
+'''
 w = np.full((X_train.shape[0], 1), 0.15)
 b = np.full((1, y_train.shape[1]), 0)
 
@@ -123,7 +125,7 @@ print('loss after update: ', loss2)
 lossAll = []
 dAll = [w]
 
-for i in range(0, 100):
+for i in range(0, 1000):
     calc = np.dot(w.transpose(), y) + b
     yCalc = forwardPropagationSigmoid(calc)
     print(yCalc.shape, yCalc.dtype)
@@ -131,13 +133,15 @@ for i in range(0, 100):
     #print(yCalc.shape)
     loss = assessment(y_train, yCalc)
     lossAll.append(loss)
+    if loss <= 0.0001:
+        break
     w, b = updatingWeights(y, y_train, yCalc)
     #print(w, w.shape)
     #print(b, b.shape)
 
     #y_pred = log.predict(y)
-    print(yCalc.shape, yCalc.dtype)
-    print(groundTruth.shape, groundTruth.dtype)
+    #print(yCalc.shape, yCalc.dtype)
+    #print(groundTruth.shape, groundTruth.dtype)
 
 '''
 print(np.round(yCalc))
@@ -152,7 +156,10 @@ plt.plot(np.array(lossAll))
 plt.show()
 # print(newData.shape)
 # Testing the data
-w = np.full((X_test.shape[0], 1), 0.15)
+
+
+
+#w = np.full((X_test.shape[0], 1), 0.15)
 b = np.full((1, y_test.shape[1]), 0)
 
 print(w, w.shape)
@@ -165,7 +172,9 @@ print(yTrue)
 x = np.real(fft.fft2(xTest))
 calc = np.dot(w.transpose(), x) + b
 yPred = forwardPropagationSigmoid(calc)
-loss2 = assessment(yTrue, yPred)
+y01 = np.where(yPred.reshape(-1) > 0.5, 1, 0)
+loss2 = assessment(yTrue, y01)
+print(y01, y01.dtype, y01.shape)
 print('loss after update: ', loss2)
-score = accuracy_score(yTrue, yPred)
-print('Accuracy :', score)
+print(confusion_matrix(yTrue.reshape(-1), y01))
+print(classification_report(yTrue.reshape(-1), y01))
