@@ -1,8 +1,6 @@
 import scipy.io as io
 import scipy.fft as fft
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import KFold, cross_val_score, train_test_split
 from sklearn import preprocessing
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix
@@ -37,7 +35,7 @@ def gradientB(x, y1, y2):
 
 
 def updatingWeights(x, y1, y2, w, b):
-    learningRate = 0.61
+    learningRate = 0.4
     updatedW = w - learningRate * gradientWeight(x, y1, y2)
     updatedB = b - learningRate * gradientB(x, y1, y2)
     return updatedW, updatedB
