@@ -11,13 +11,6 @@ def forwardPropagationSigmoid(xvalue):
     return sig
 
 
-def Sigmoid(z):
-    if z < 0:
-        return 1 - 1/(1 + np.exp(z))
-    else:
-        return 1/(1 + np.exp(-z))
-
-
 def assessment(y1, y2):
     m = y1.shape[1]
     lossWB = (-1/m)*np.sum(np.multiply(y1, np.log(y2+0.1)) + np.multiply((1-y1), np.log(1-y2+0.1)))
@@ -88,7 +81,6 @@ def trainModel(x, y):
 
 # Testing the data
 def testingData(x, y, w, b):
-    #w = np.full((X_test.shape[0], 1), )
     b = np.full((1, y.shape[1]), b[0][0])
     xTest, y = preProcessing(x, y)
     x = np.real(fft.fft2(xTest))
